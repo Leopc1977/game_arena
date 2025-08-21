@@ -75,18 +75,24 @@ def main(_) -> None:
   model_player_one = model_generation_http.OpenAIGenericAPIModel(
     model_name=_DEEP_SEEK_MODEL.value,
     api_endpoint="http://127.0.0.1:8081/v1/chat/completions",
-    self_hosted=True,
+    local_model=True,
     api_options={
       "stream": False
+    },
+    model_options={
+      "image_support": False
     }
   )
 
   model_player_two = model_generation_http.OpenAIGenericAPIModel(
     model_name=_DEEP_SEEK_MODEL.value,
     api_endpoint="http://127.0.0.1:8081/v1/chat/completions",
-    self_hosted=True,
+    local_model=True,
     api_options={
       "stream": False
+    },
+    model_options={
+      "image_support": False
     }
   )
 
@@ -104,9 +110,12 @@ def main(_) -> None:
       parser_model = model_generation_http.OpenAIGenericAPIModel(
         model_name=_DEEP_SEEK_MODEL.value,
         api_endpoint="http://127.0.0.1:8082/v1/chat/completions",
-        self_hosted=True,
+        local_model=True,
         api_options={
           "stream": False
+        },
+        model_options={
+          "image_support": False
         }
       )
       parser = llm_parsers.LLMParser(

@@ -719,7 +719,7 @@ class OpenAIGenericAPIModel(model_generation.MultimodalModel):
       self,
       model_name: str,
       api_endpoint: str = None,
-      self_hosted: bool = False,
+      local_model: bool = False,
       *,
       model_options: Mapping[str, Any] | None = None,
       api_options: Mapping[str, Any] | None = None,
@@ -734,7 +734,7 @@ class OpenAIGenericAPIModel(model_generation.MultimodalModel):
     if self._api_options is None:
       self._api_options = {}
 
-    if api_key is None and self_hosted is True:
+    if api_key is None and local_model is True:
       api_key = ""
     else:
       raise ValueError("API key is not set.")
@@ -745,6 +745,7 @@ class OpenAIGenericAPIModel(model_generation.MultimodalModel):
     self._headers = {"Authorization": f"Bearer {api_key}"}
     self._debug = debug
     self._stream = self._api_options.get("stream", True)
+    self._image_support = self._api_options.get("image_support", True)
 
   # TODO(google-deepmind): Add error handling.
   def _post_request(self, request: Mapping[str, Any], stream: bool):
@@ -1027,7 +1028,7 @@ class OpenAIGenericAPIModel(model_generation.MultimodalModel):
   def generate_with_image_text_input(
       self, model_input: tournament_util.ModelImageTextInput
   ) -> tournament_util.GenerateReturn:
-    if "grok-3" in self._model_name:
+    if not self._image_support:
       raise model_generation.UnsupportedCapabilityError(
           f"Model {self._model_name} does not support image input."
       )
