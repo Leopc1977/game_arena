@@ -16,7 +16,7 @@
 
 from absl import app
 from absl import flags
-from game_arena.harness import game_notation_examples
+from game_arena.harness import game_notation_examples, model_generation_http
 from game_arena.harness import llm_parsers
 from game_arena.harness import model_generation_sdk
 from game_arena.harness import parsers
@@ -36,16 +36,16 @@ _NUM_MOVES = flags.DEFINE_integer(
     "Number of moves to play.",
 )
 
-_GEMINI_MODEL = flags.DEFINE_string(
-    "gemini_model",
-    "gemini-2.5-flash",
-    "Gemini model to play as player one.",
+_DEEP_SEEK_MODEL = flags.DEFINE_string(
+    "deep_seek_model",
+    "deepseek-llm-7b-chat.Q4_K_M",
+    "Deepseek model to play as player one.",
 )
 
 _OPENAI_MODEL = flags.DEFINE_string(
     "openai_model",
     "gpt-4.1",
-    "OpenAI model to play as player two.",
+    "Deepseek model to play as player two.",
 )
 
 _PARSER_CHOICE = flags.DEFINE_enum_class(
@@ -66,11 +66,22 @@ def main(_) -> None:
   prompt_template = prompts.PromptTemplate.NO_LEGAL_ACTIONS
 
   # Set up model generation:
-  model_player_one = model_generation_sdk.AIStudioModel(
-      model_name=_GEMINI_MODEL.value
+  model_player_one = model_generation_http.OpenAIGenericAPIModel(
+    model_name=_DEEP_SEEK_MODEL.value,
+    api_endpoint="http://127.0.0.1:8081/v1/chat/completions",
+    self_hosted=True,
+    api_options={
+      "stream": False
+    }
   )
-  model_player_two = model_generation_sdk.OpenAIChatCompletionsModel(
-      model_name=_OPENAI_MODEL.value
+
+  model_player_two = model_generation_http.OpenAIGenericAPIModel(
+    model_name=_DEEP_SEEK_MODEL.value,
+    api_endpoint="http://127.0.0.1:8081/v1/chat/completions",
+    self_hosted=True,
+    api_options={
+      "stream": False
+    }
   )
 
   # Set up parser;
