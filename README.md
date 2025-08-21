@@ -1,3 +1,31 @@
+## **Support for Any OpenAI-Compatible API**
+
+I have extended **Game Arena** with a new class **`OpenAIGenericAPIModel`** in `harness/model_generation_http.py`. This class allows using any OpenAI-compatible API, including local models.
+
+### **Key Features**
+
+- **Constructor parameters:**
+
+```python
+model = OpenAIGenericAPIModel(
+    api_endpoint="http://127.0.0.1:8082/v1/chat/completions",
+    local_model=True,
+    model_options={
+        "image_support": False
+    }
+)
+```
+
+- api_endpoint: URL of your local or remote API.
+
+- local_model: Boolean to indicate if the model is running locally.
+
+- model_options: Dictionary to configure the model (e.g., disable image support).
+
+This addition enables seamless integration of locally hosted models into Game Arena, without relying solely on OpenAI or Gemini APIs.
+
+---
+
 # Game Arena
 
 This GitHub repository contains the harness developed by Google DeepMind for
