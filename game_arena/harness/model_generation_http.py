@@ -356,7 +356,7 @@ class XAIModel(model_generation.MultimodalModel):
 
     if full_content is None:
       logging.warning(
-          "xAI Completion return content is None. Returning empty string."
+          f"{self._model_name} Completion return content is None. Returning empty string."
           " Request: %s",
           request,
       )
@@ -745,11 +745,10 @@ class OpenAIGenericAPIModel(model_generation.MultimodalModel):
     self._headers = {"Authorization": f"Bearer {api_key}"}
     self._debug = debug
     self._stream = self._api_options.get("stream", True)
-    print("stream:",self._stream)
 
   # TODO(google-deepmind): Add error handling.
   def _post_request(self, request: Mapping[str, Any], stream: bool):
-    """Sends a POST request to the xAI API and handles errors."""
+    """Sends a POST request to the API and handles errors."""
     timeout = self._api_options.get("timeout", 20 * 60)
     try:
       response = requests.post(
@@ -764,7 +763,7 @@ class OpenAIGenericAPIModel(model_generation.MultimodalModel):
       return response
     except requests.exceptions.HTTPError as e:
       if e.response is not None:
-        print("Error during XAI request: ", flush=True)
+        print(f"Error during {self._model_name}  request: ", flush=True)
         print(f"Status code: {e.response.status_code}", flush=True)
         print(f"Reason: {e.response.reason}", flush=True)
         print(f"Headers: {e.response.headers}", flush=True)
@@ -797,7 +796,7 @@ class OpenAIGenericAPIModel(model_generation.MultimodalModel):
 
     if full_content is None:
       logging.warning(
-          "xAI Completion return content is None. Returning empty string."
+          f"{self._model_name} Completion return content is None. Returning empty string."
           " Request: %s",
           request,
       )
