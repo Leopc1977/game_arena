@@ -18,7 +18,6 @@ from absl import app
 from absl import flags
 from game_arena.harness import game_notation_examples, model_generation_http
 from game_arena.harness import llm_parsers
-from game_arena.harness import model_generation_sdk
 from game_arena.harness import parsers
 from game_arena.harness import prompt_generation
 from game_arena.harness import prompts
@@ -125,9 +124,7 @@ def main(_) -> None:
     case _:
       raise ValueError(f"Unsupported parser choice: {_PARSER_CHOICE.value}")
 
-  # for move_number in range(_NUM_MOVES.value):
-  move_number = 0
-  while not pyspiel_state.is_terminal():
+  for move_number in range(_NUM_MOVES.value):
     print(f"Pre-move debug string: {pyspiel_state.debug_string()}")
     if pyspiel_state.is_terminal():
       print(colored("Game is terminal, ending move loop.", "red"))
@@ -195,8 +192,6 @@ def main(_) -> None:
 
     # 4. Apply the move:
     pyspiel_state.apply_action(pyspiel_state.string_to_action(parser_output))
-
-    move_number += 1
 
   print(colored("Game over.", "green"))
 
