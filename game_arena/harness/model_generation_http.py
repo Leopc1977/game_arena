@@ -754,7 +754,7 @@ class OpenAIGenericAPIModel(model_generation.MultimodalModel):
 
     self._debug = debug
     self._stream = self._api_options.get("stream", True)
-    self._image_support = self._api_options.get("image_support", True)
+    self._image_support = self._api_options.get("image_support", False)
 
   # TODO(google-deepmind): Add error handling.
   def _post_request(self, request: Mapping[str, Any], stream: bool):

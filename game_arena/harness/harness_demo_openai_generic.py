@@ -16,7 +16,7 @@
 
 from absl import app
 from absl import flags
-from game_arena.harness import game_notation_examples
+from game_arena.harness import game_notation_examples, model_generation_http
 from game_arena.harness import llm_parsers
 from game_arena.harness import model_generation_sdk
 from game_arena.harness import parsers
@@ -36,16 +36,22 @@ _NUM_MOVES = flags.DEFINE_integer(
     "Number of moves to play.",
 )
 
-_GEMINI_MODEL = flags.DEFINE_string(
-    "gemini_model",
-    "gemini-2.5-flash",
-    "Gemini model to play as player one.",
+_DEEP_SEEK_MODEL = flags.DEFINE_string(
+    "deep_seek_model",
+    "deepseek-llm-7b-chat.Q4_K_M",
+    "Deepseek model to play as player one.",
+)
+
+_GPT_OSS_MODEL = flags.DEFINE_string(
+    "gpt_oss_model",
+    "gpt-oss-20b-Q3_K_M",
+    "GPT-OSS model to play as player two.",
 )
 
 _OPENAI_MODEL = flags.DEFINE_string(
     "openai_model",
     "gpt-4.1",
-    "OpenAI model to play as player two.",
+    "Deepseek model to play as player two.",
 )
 
 _PARSER_CHOICE = flags.DEFINE_enum_class(
@@ -63,14 +69,31 @@ def main(_) -> None:
 
   # Set up prompt generator:
   prompt_generator = prompt_generation.PromptGeneratorText()
-  prompt_template = prompts.PromptTemplate.NO_LEGAL_ACTIONS
+  prompt_template = prompts.PromptTemplate.WITH_LEGAL_ACTIONS
 
   # Set up model generation:
-  model_player_one = model_generation_sdk.AIStudioModel(
-      model_name=_GEMINI_MODEL.value
+  model_player_one = model_generation_http.OpenAIGenericAPIModel(
+    model_name=_DEEP_SEEK_MODEL.value,
+    api_endpoint="http://127.0.0.1:8081/v1/chat/completions",
+    local_model=True,
+    api_options={
+      "stream": False
+    },
+    model_options={
+      "image_support": False
+    }
   )
-  model_player_two = model_generation_sdk.OpenAIChatCompletionsModel(
-      model_name=_OPENAI_MODEL.value
+
+  model_player_two = model_generation_http.OpenAIGenericAPIModel(
+    model_name=_DEEP_SEEK_MODEL.value,
+    api_endpoint="http://127.0.0.1:8081/v1/chat/completions",
+    local_model=True,
+    api_options={
+      "stream": False
+    },
+    model_options={
+      "image_support": False
+    }
   )
 
   # Set up parser;
@@ -84,8 +107,16 @@ def main(_) -> None:
           [parsers.RuleBasedMoveParser(), parsers.SoftMoveParser("chess")]
       )
     case tournament_util.ParserChoice.LLM_ONLY:
-      parser_model = model_generation_sdk.AIStudioModel(
-          model_name="gemini-2.5-flash"
+      parser_model = model_generation_http.OpenAIGenericAPIModel(
+        model_name=_DEEP_SEEK_MODEL.value,
+        api_endpoint="http://127.0.0.1:8082/v1/chat/completions",
+        local_model=True,
+        api_options={
+          "stream": False
+        },
+        model_options={
+          "image_support": False
+        }
       )
       parser = llm_parsers.LLMParser(
           model=parser_model,
@@ -94,7 +125,9 @@ def main(_) -> None:
     case _:
       raise ValueError(f"Unsupported parser choice: {_PARSER_CHOICE.value}")
 
-  for move_number in range(_NUM_MOVES.value):
+  # for move_number in range(_NUM_MOVES.value):
+  move_number = 0
+  while not pyspiel_state.is_terminal():
     print(f"Pre-move debug string: {pyspiel_state.debug_string()}")
     if pyspiel_state.is_terminal():
       print(colored("Game is terminal, ending move loop.", "red"))
@@ -121,6 +154,7 @@ def main(_) -> None:
         "notation": game_notation_examples.GAME_SPECIFIC_NOTATIONS["chess"][
             "state_notation"
         ],
+        "legal_actions": parsers.get_legal_action_strings(pyspiel_state),
     }
     prompt = prompt_generator.generate_prompt_with_text_only(
         prompt_template=prompt_template,
@@ -155,11 +189,16 @@ def main(_) -> None:
     parser_output = parser.parse(parser_input)
     if parser_output is None:
       print(colored("Parser output is None, ending game.", "red"))
+      return
     else:
       print(colored(f"Parser output is {parser_output}.", "magenta"))
 
     # 4. Apply the move:
     pyspiel_state.apply_action(pyspiel_state.string_to_action(parser_output))
+
+    move_number += 1
+
+  print(colored("Game over.", "green"))
 
 
 if __name__ == "__main__":
