@@ -356,7 +356,7 @@ class XAIModel(model_generation.MultimodalModel):
 
     if full_content is None:
       logging.warning(
-          f"{self._model_name} Completion return content is None. Returning empty string."
+          "xAI Completion return content is None. Returning empty string."
           " Request: %s",
           request,
       )
