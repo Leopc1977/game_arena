@@ -734,14 +734,24 @@ class OpenAIGenericAPIModel(model_generation.MultimodalModel):
     if self._api_options is None:
       self._api_options = {}
 
+    if api_endpoint is None:
+      raise ValueError("api_endpoint url is not set.")
+
+    if not api_endpoint.startswith(('http://', 'https://')):
+      raise ValueError("api_endpoint must be a valid HTTP/HTTPS URL")
+
     if api_key is None:
       if local_model:
         api_key = ""
       else:
-          raise ValueError("API key is required for non-local models.")
+        raise ValueError("API key is required for non-local models.")
 
     self.api_endpoint = api_endpoint
-    self._headers = {"Authorization": f"Bearer {api_key}"}
+    if api_key:
+      self._headers = {"Authorization": f"Bearer {api_key}"}
+    else:
+      self._headers = {}
+
     self._debug = debug
     self._stream = self._api_options.get("stream", True)
     self._image_support = self._api_options.get("image_support", True)
@@ -786,7 +796,7 @@ class OpenAIGenericAPIModel(model_generation.MultimodalModel):
         "stream": False,
         "stream_options": {"include_usage": True},
     }
-    for option in ["temperature", "top_p", "top_k"]:
+    for option in ["temperature", "top_p", "top_k", "max_tokens"]:
       if option in self._model_options:
         request[option] = self._model_options[option]
 
@@ -894,6 +904,9 @@ class OpenAIGenericAPIModel(model_generation.MultimodalModel):
         "stream": True,
         "stream_options": {"include_usage": True},
     }
+    for option in ["temperature", "top_p", "top_k", "max_tokens"]:
+      if option in self._model_options:
+        request[option] = self._model_options[option]
 
     full_content = ""
     full_reasoning_content = ""
@@ -1030,6 +1043,10 @@ class OpenAIGenericAPIModel(model_generation.MultimodalModel):
       raise model_generation.UnsupportedCapabilityError(
           f"Model {self._model_name} does not support image input."
       )
+    if not model_input.prompt_image_bytes:
+      raise ValueError("Image input is empty")
+    if not hasattr(model_input, 'prompt_image_mime_type'):
+      raise ValueError("Image MIME type is required")
     messages = []
     if model_input.system_instruction is not None:
       messages.append(
