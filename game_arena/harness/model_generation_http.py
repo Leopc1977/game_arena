@@ -734,12 +734,11 @@ class OpenAIGenericAPIModel(model_generation.MultimodalModel):
     if self._api_options is None:
       self._api_options = {}
 
-    if api_key is None and local_model is True:
-      api_key = ""
-    else:
-      raise ValueError("API key is not set.")
-    if api_endpoint is None:
-      raise ValueError("api_endpoint url is not set.")
+    if api_key is None:
+      if local_model:
+        api_key = ""
+      else:
+          raise ValueError("API key is required for non-local models.")
 
     self.api_endpoint = api_endpoint
     self._headers = {"Authorization": f"Bearer {api_key}"}
@@ -925,7 +924,6 @@ class OpenAIGenericAPIModel(model_generation.MultimodalModel):
               if "choices" in json_data and json_data["choices"]:
                 delta = json_data["choices"][0].get("delta", {})
                 if "content" in delta:
-                  print(delta)
                   delta_content = delta["content"]
                   full_content += delta_content
                   is_full_content_print = self._log_chunk_received(
